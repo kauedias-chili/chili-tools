@@ -174,6 +174,41 @@ HTML_PAGE = """
             box-shadow: 0 0 0 4px rgba(0, 255, 157, 0.1);
         }
 
+        .result-box { 
+            margin-top: 2rem;
+            background: #000; 
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace; 
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #d4d4d8;
+            white-space: pre-wrap; 
+            display: none;
+            overflow-x: auto;
+        }
+
+        /* Table Styling */
+        .markdown-body table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+        .markdown-body th, .markdown-body td { 
+            border: 1px solid var(--border-color); 
+            padding: 0.75rem; 
+            text-align: left; 
+        }
+        .markdown-body th { background: rgba(0, 255, 157, 0.05); color: var(--accent-color); }
+
+        .spinner {
+            display: none;
+            margin: 1.5rem auto 0;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(16, 185, 129, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
         .actions {
             display: flex;
             gap: 1rem;
