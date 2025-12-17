@@ -13,13 +13,16 @@ load_dotenv()
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 try:
-    from agents import auditor, planner, writer, manager
+    from agents import create_agents # Importa a factory
 except ImportError as e:
     print(f"Erro ao importar agentes: {e}")
     sys.exit(1)
 
-def run_workflow(client, topic, website):
+def run_workflow(client, topic, website, gemini_key, ahrefs_key, drive_folder_id=None):
     # print(f"DEBUG: Iniciando para {client}...") # Comentado para limpar a saída do PHP
+    
+    # Cria os agentes dinamicamente
+    auditor, planner, writer, manager = create_agents(gemini_key, ahrefs_key, drive_folder_id)
 
     # --- Definição das Tasks ---
     auditor_task = Task(
@@ -64,20 +67,24 @@ def run_workflow(client, topic, website):
 
 if __name__ == "__main__":
     # 2. Captura os dados enviados pelo comando shell_exec do PHP
-    # Ordem: script.py [1]Cliente [2]Topico [3]Site
-    if len(sys.argv) > 3:
+    # 2. Captura os dados enviados pelo comando shell_exec do PHP
+    # Ordem: script.py [1]Cliente [2]Topico [3]Site [4]GeminiKey [5]AhrefsKey [6]DriveFolderID (Opcional)
+    if len(sys.argv) > 5:
         client_arg = sys.argv[1]
         topic_arg = sys.argv[2]
         website_arg = sys.argv[3]
+        gemini_key_arg = sys.argv[4]
+        ahrefs_key_arg = sys.argv[5]
+        # Pega o arg 6 s existir, senão None
+        drive_folder_arg = sys.argv[6] if len(sys.argv) > 6 else None
     else:
-        # Valores padrão caso rode manual no VS Code
-        client_arg = "Cliente Teste"
-        topic_arg = "Marketing Digital"
-        website_arg = "exemplo.com"
+        # Defaults or Error - Forcing error if keys missing in prod context, but keeping safe for dev
+        print("Erro: Chaves de API não fornecidas via argumentos.")
+        sys.exit(1)
 
     try:
         # Executa o workflow
-        resultado_final = run_workflow(client_arg, topic_arg, website_arg)
+        resultado_final = run_workflow(client_arg, topic_arg, website_arg, gemini_key_arg, ahrefs_key_arg, drive_folder_arg)
         
         # 3. O print final é o que o PHP vai capturar e mostrar na tela
         print("\n--- INÍCIO DO CONTEÚDO ---\n")
