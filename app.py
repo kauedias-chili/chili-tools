@@ -156,6 +156,24 @@ HTML_PAGE = """
             font-weight: 500;
         }
         
+        .form-control { 
+            width: 100%; 
+            background: var(--input-bg); 
+            border: 1px solid var(--border-color); 
+            color: var(--text-primary); 
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(0, 255, 157, 0.05);
+            box-shadow: 0 0 0 4px rgba(0, 255, 157, 0.1);
+        }
+
         .result-box { 
             margin-top: 2rem;
             background: #000; 
@@ -180,8 +198,15 @@ HTML_PAGE = """
         }
         .markdown-body th { background: rgba(0, 255, 157, 0.05); color: var(--accent-color); }
 
-        .spinner {   background: rgba(0, 255, 157, 0.05);
-            box-shadow: 0 0 0 4px rgba(0, 255, 157, 0.1);
+        .spinner {
+            display: none;
+            margin: 1.5rem auto 0;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(16, 185, 129, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
         }
 
         .actions {
