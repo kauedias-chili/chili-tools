@@ -156,21 +156,31 @@ HTML_PAGE = """
             font-weight: 500;
         }
         
-        .form-control { 
-            width: 100%; 
-            background: var(--input-bg); 
-            border: 1px solid var(--border-color); 
-            color: var(--text-primary); 
-            padding: 1rem 1.25rem;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+        .result-box { 
+            margin-top: 2rem;
+            background: #000; 
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace; 
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #d4d4d8;
+            white-space: pre-wrap; 
+            display: none;
+            overflow-x: auto;
         }
 
-        .form-control:focus {
-            outline: none;
-            border-color: var(--accent-color);
-            background: rgba(0, 255, 157, 0.05);
+        /* Table Styling */
+        .markdown-body table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+        .markdown-body th, .markdown-body td { 
+            border: 1px solid var(--border-color); 
+            padding: 0.75rem; 
+            text-align: left; 
+        }
+        .markdown-body th { background: rgba(0, 255, 157, 0.05); color: var(--accent-color); }
+
+        .spinner {   background: rgba(0, 255, 157, 0.05);
             box-shadow: 0 0 0 4px rgba(0, 255, 157, 0.1);
         }
 
