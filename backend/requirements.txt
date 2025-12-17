@@ -1,0 +1,5 @@
+crewai
+requests
+flask
+flask-cors
+jsonschema
