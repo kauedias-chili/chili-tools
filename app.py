@@ -314,6 +314,34 @@ HTML_PAGE = """
             color: #d4d4d8;
             line-height: 1.7;
         }
+
+        .tip-box {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 255, 157, 0.03);
+            border: 1px dashed rgba(0, 255, 157, 0.2);
+            border-radius: 12px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tip-header {
+            font-size: 0.75rem;
+            color: var(--accent-color);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tip-content {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
         
         .markdown-body h1, .markdown-body h2, .markdown-body h3 {
             color: var(--text-primary);
@@ -391,6 +419,12 @@ HTML_PAGE = """
                     <div id="loadingText" style="text-align: center; color: var(--text-secondary); margin-bottom: 1rem;">
                         <i class="fa-solid fa-circle-notch fa-spin"></i> Inicializando agentes...
                     </div>
+                    
+                    <div id="tipBox" class="tip-box">
+                        <div class="tip-header"><i class="fa-solid fa-lightbulb"></i> SEO Pro-Tip</div>
+                        <div id="tipContent" class="tip-content">Carregando dicas valiosas...</div>
+                    </div>
+
                     <div id="outputContent" class="markdown-body"></div>
                 </div>
             </div>
@@ -399,6 +433,34 @@ HTML_PAGE = """
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        const seoTips = [
+            "A palavra-chave primária deve aparecer nos primeiros 10% do seu conteúdo.",
+            "Links internos ajudam o Google a entender a estrutura e autoridade do seu site.",
+            "O tempo de carregamento da página é um fator crítico para o ranking mobile.",
+            "Use tabelas e listas (como esta!) para aumentar suas chances de ganhar Featured Snippets.",
+            "A Meta Description não afeta o ranking diretamente, mas melhora muito o seu CTR (clique).",
+            "Conteúdo focado na Experiência do Usuário (E-E-A-T) é a prioridade do Google em 2025.",
+            "H2s e H3s otimizados ajudam o leitor e os bots a escanearem o seu artigo.",
+            "Otimize imagens com Alt Text descritivo para aparecer no Google Imagens."
+        ];
+
+        function rotateTips() {
+            let i = 0;
+            $('#tipBox').fadeIn();
+            const interval = setInterval(() => {
+                if ($('#outputContent').is(':empty')) {
+                    $('#tipContent').fadeOut(400, function() {
+                        $(this).text(seoTips[i]).fadeIn(400);
+                        i = (i + 1) % seoTips.length;
+                    });
+                } else {
+                    clearInterval(interval);
+                    $('#tipBox').hide();
+                }
+            }, 6000);
+            $('#tipContent').text(seoTips[0]);
+        }
+
         // Função para simular progresso visual (Atualizada para 6 estágios)
         function simulateProgress(speed = 2000) {
             const steps = ['step1', 'step2', 'step3', 'step4', 'step5', 'step6'];
@@ -407,6 +469,8 @@ HTML_PAGE = """
             // Ativa o primeiro
             $('#'+steps[0]).addClass('active');
             $('#loadingText').html('<i class="fa-solid fa-spinner fa-spin"></i> Onboarding Auditor analisando site...');
+            
+            rotateTips();
 
             const interval = setInterval(() => {
                 $('#'+steps[current]).removeClass('active').addClass('completed');
