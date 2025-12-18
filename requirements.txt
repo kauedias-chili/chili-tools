@@ -8,3 +8,10 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 requests
+beautifulsoup4
+langchain
+pydantic
+spacy
+seoanalyzer
+lxml
+html5lib
