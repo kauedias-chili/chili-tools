@@ -1,60 +1,79 @@
-# Multi-Agent System Project
+# Chili Tools | Advanced SEO Agentic AI
 
-This project implements a multi-agent system using the CrewAI framework, with a front-end developed in PHP, JavaScript, and HTML, and a back-end built in Python.
+[English](#english) | [Português](#português)
 
-## Project Structure
+---
 
-The project is organized into two main directories: `backend` and `frontend`.
+## English
 
-### Backend
+Advanced 6-stage SEO content generation pipeline powered by CrewAI and Google Gemini 2.5 Flash.
 
-- **crewai_app**: Contains the core application logic.
-  - `__init__.py`: Initializes the CrewAI application package.
-  - `agents.py`: Defines agent classes such as AudienceMarketAuditor, KeywordPlanner, ContentWriter, and ContentManager.
-  - `main.py`: Entry point for the application, orchestrating agent execution.
-  - `utils.py`: Contains utility functions for data processing and API calls.
-- `requirements.txt`: Lists the dependencies required for the Python backend.
-- `README.md`: Documentation for setting up and running the Python application.
+### 🚀 Features
+- **6 Specialized Agents**: Onboarding Auditor, SEO Strategist, Briefing Architect, Content Developer, SEO Quality Manager, and Implementation Manager.
+- **Asynchronous Execution**: Background task processing using threading to prevent server timeouts.
+- **Real-time Polling**: Modern UI with status updates and SEO Pro-tips during processing.
+- **Cloud Ready**: Optimized for Render deployment with dynamic port and path handling.
 
-### Frontend
+### 🛠️ Tech Stack
+- **Backend**: Python, Flask, CrewAI.
+- **LLM**: Google Gemini 2.5 Flash.
+- **UI**: HTML5, CSS3 (Glassmorphism), JavaScript (jQuery, Marked.js).
+- **Tools**: Custom Ahrefs tool, Google Drive/Docs integration.
 
-- **public**: Contains static files for the front-end application.
-  - `index.html`: Main HTML file for the web dashboard.
-  - `styles.css`: CSS styles for the dashboard.
-  - `app.js`: JavaScript code for handling user interactions and API requests.
-- **src**: Contains server-side scripts.
-  - `api.php`: Handles API requests from the front-end to the back-end.
-- `README.md`: Documentation for setting up and running the PHP application.
-
-## Setup Instructions
-
-### Backend
-
-1. Navigate to the `backend` directory.
-2. Install the required dependencies using pip:
-   ```
+### ⚙️ Installation
+1. Clone the repository.
+2. Install dependencies:
+   ```bash
    pip install -r requirements.txt
    ```
-3. Run the application:
+3. Set up environment variables in a `.env` file:
+   ```env
+   GEMINI_API_KEY=your_key_here
+   AHREFS_API_KEY=your_key_here (optional)
    ```
-   python -m crewai_app.main
+4. Run the application:
+   ```bash
+   python app.py
    ```
 
-### Frontend
+---
 
-1. Navigate to the `frontend` directory.
-2. Ensure your PHP server is running.
-3. Access the application via your web browser.
+## Português
 
-## Architecture
+Pipeline avançado de SEO de 6 estágios alimentado por CrewAI e Google Gemini 2.5 Flash.
 
-The system is designed to facilitate interaction between multiple agents, each responsible for specific tasks in the workflow. The front-end communicates with the back-end via API calls, allowing for real-time updates and user interactions.
+### 🚀 Funcionalidades
+- **6 Agentes Especialistas**: Auditor de Onboarding, Estrategista SEO, Arquiteto de Briefing, Desenvolvedor de Conteúdo, Gestor de Qualidade SEO e Gerente de Implementação.
+- **Execução Assíncrona**: Processamento de tarefas em segundo plano usando threading para evitar timeouts no servidor.
+- **Polling em Tempo Real**: Interface moderna com atualizações de status e Dicas Pro de SEO durante o processamento.
+- **Pronto para Nuvem**: Otimizado para deploy no Render com gerenciamento dinâmico de portas e caminhos.
 
-## Workflow
+### 🛠️ Tecnologias
+- **Backend**: Python, Flask, CrewAI.
+- **LLM**: Google Gemini 2.5 Flash.
+- **UI**: HTML5, CSS3 (Glassmorphism), JavaScript (jQuery, Marked.js).
+- **Ferramentas**: Ferramenta Ahrefs customizada, integração Google Drive/Docs.
 
-1. Users interact with the front-end dashboard.
-2. The front-end sends requests to the back-end via the API.
-3. The back-end processes the requests using the defined agents.
-4. Results are returned to the front-end for display.
+### ⚙️ Instalação
+1. Clone o repositório.
+2. Instale as dependências:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Configure as variáveis de ambiente em um arquivo `.env`:
+   ```env
+   GEMINI_API_KEY=sua_chave_aqui
+   AHREFS_API_KEY=sua_chave_aqui (opcional)
+   ```
+4. Execute a aplicação:
+   ```bash
+   python app.py
+   ```
 
-This project aims to provide a robust framework for developing and managing multi-agent systems efficiently.
+### 👔 Fluxo de Trabalho
+1. **Onboarding**: Entendimento da marca e persona.
+2. **Estratégia**: Pesquisa de 50 keywords e clusterização.
+3. **Briefing**: Estruturação técnica do artigo.
+4. **Desenvolvimento**: Redação IA de alta qualidade.
+5. **Auditoria**: Checklist SEO On-page rigoroso.
+6. **Implementação**: Entrega final no Google Docs.
