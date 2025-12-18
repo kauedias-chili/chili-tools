@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string, request, jsonify
+from flask import Flask, render_template_string, request, jsonify, send_from_directory
 import subprocess
 import os
 import sys
@@ -550,7 +550,13 @@ HTML_PAGE = """
                                     clearInterval(pollInterval);
                                     btn.prop('disabled', false).html('<i class="fa-solid fa-play"></i> Iniciar Agentes');
                                     demoBtn.prop('disabled', false);
-                                    $('#outputContent').html(marked.parse(status.data));
+                                    
+                                    let downloadHtml = '<div style="margin-top: 1.5rem; display: flex; gap: 1rem;">' +
+                                        '<a href="/download/keywords.csv" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.5rem 1rem;"><i class="fa-solid fa-file-csv"></i> Baixar CSV</a>' +
+                                        '<a href="/download/FINAL_DELIVERY.md" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.5rem 1rem;"><i class="fa-solid fa-file-pdf"></i> Baixar Relatório</a>' +
+                                        '</div>';
+                                    
+                                    $('#outputContent').html(marked.parse(status.data) + downloadHtml);
                                     $('.step').removeClass('active').addClass('completed');
                                     $('#loadingText').html('<i class="fa-solid fa-check-circle" style="color: var(--accent-color)"></i> Finalizado com sucesso!');
                                 } else if(status.status === 'error') {
@@ -705,6 +711,10 @@ def check_status(task_id):
         return jsonify({'status': 'not_found'})
     
     return jsonify(task)
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    return send_from_directory(os.getcwd(), filename, as_attachment=True)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))

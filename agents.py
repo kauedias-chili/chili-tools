@@ -14,8 +14,9 @@ def create_agents(gemini_api_key, ahrefs_api_key=None, drive_folder_id=None):
 
     # Imports das Tools
     from tools.ahrefs_tool import AhrefsKeywordTool, AhrefsDomainStatsTool, AhrefsTopPagesTool
-    from tools.google_drive_tool import GoogleDriveLoaderTool
+    from tools.google_drive_tool import GoogleDriveLoaderTool, GoogleDriveUploaderTool
     from tools.google_docs_tool import GoogleDocsWriterTool
+    from tools.csv_tool import CSVGeneratorTool
     from crewai_tools import ScrapeWebsiteTool
 
     # Instancia as Tools
@@ -23,8 +24,10 @@ def create_agents(gemini_api_key, ahrefs_api_key=None, drive_folder_id=None):
     ahrefs_stats = AhrefsDomainStatsTool()
     ahrefs_top = AhrefsTopPagesTool()
     
-    drive_tool = GoogleDriveLoaderTool()
+    drive_loader = GoogleDriveLoaderTool()
+    drive_uploader = GoogleDriveUploaderTool()
     docs_tool = GoogleDocsWriterTool()
+    csv_tool = CSVGeneratorTool()
     scrape_tool = ScrapeWebsiteTool()
 
     # --- 1. Onboarding Auditor ---
@@ -33,7 +36,7 @@ def create_agents(gemini_api_key, ahrefs_api_key=None, drive_folder_id=None):
         goal="Entender a identidade da marca e analisar a saúde atual do site {website} usando métricas do Ahrefs (DR, Tráfego) e Top Pages.",
         backstory="""Você é especialista em branding e análise técnica inicial. Sua missão é extrair a 'alma' do negócio
         e também reportar como o site {website} está performando hoje no Google (DR e páginas que mais trazem tráfego).""",
-        tools=[drive_tool, scrape_tool, ahrefs_stats, ahrefs_top],
+        tools=[drive_loader, scrape_tool, ahrefs_stats, ahrefs_top],
         llm=gemini_llm,
         verbose=True
     )
@@ -83,10 +86,13 @@ def create_agents(gemini_api_key, ahrefs_api_key=None, drive_folder_id=None):
     # --- 6. Implementation Manager ---
     implementation_agent = Agent(
         role="Implementation Manager",
-        goal="Preparar o documento final e garantir a implementação/postagem no Google Docs.",
-        backstory="""Você é o responsável final pela entrega. Você organiza o conteúdo, adiciona as notas de auditoria 
-        e salva no Google Docs usando a ferramenta apropriada.""",
-        tools=[docs_tool],
+        goal="Consolidar a entrega final, gerar o CSV de palavras-chave e arquivar todos os documentos no Google Drive (Pasta: {drive_folder_id}).",
+        backstory="""Você é o responsável final pela entrega. Sua missão é:
+        1. Gerar o CSV das palavras-chave pesquisadas.
+        2. Fazer o upload de TODOS os arquivos de progresso (.md) e do CSV para o Google Drive na pasta {drive_folder_id}.
+        3. Salvar o artigo final no Google Docs.
+        """,
+        tools=[docs_tool, drive_uploader, csv_tool],
         llm=gemini_llm,
         verbose=True
     )

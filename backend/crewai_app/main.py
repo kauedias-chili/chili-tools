@@ -17,51 +17,97 @@ try:
 except ImportError as e:
     print(f"Erro ao importar agentes: {e}")
     sys.exit(1)
-
 def run_workflow(client, topic, website, gemini_key, ahrefs_key, drive_folder_id=None):
-    # Cria os 6 agentes especializados
+    # Cria os agentes (Mantive sua lógica original)
     auditor, strategist, architect, developer, auditor_seo, implementer = create_agents(gemini_key, ahrefs_key, drive_folder_id)
 
-    # --- 1. Onboarding Task ---
+    # --- 1. Onboarding Task (A Fundação) ---
     onboarding_task = Task(
-        description=f"Realize o onboarding da marca para {website}. Use as ferramentas do Ahrefs para reportar o Domain Rating (DR) e as Top Pages atuais. Extraia persona, tom de voz e diferenciais.",
+        description=f"""
+        Analise a marca {website} profundamente. 
+        1. Use a ferramenta do Ahrefs para extrair DR (Domain Rating) e as 5 Top Pages orgânicas.
+        2. Defina a 'Brand Persona' e o Tom de Voz exato (ex: formal, divertido, técnico).
+        3. Liste 3 diferenciais competitivos baseados no conteúdo atual.
+        """,
         agent=auditor,
-        expected_output="Relatório de Onboarding incluindo Métricas Ahrefs (DR, Tráfego), Top Pages e Brand Persona."
+        expected_output="Relatório detalhado com Métricas Ahrefs, Persona, Tom de Voz e Diferenciais.",
+        output_file="1_onboarding.md" # Salva o progresso
     )
     
-    # --- 2. Keyword Research Task ---
+    # --- 2. Keyword Research Task (Os Dados) ---
     keywords_task = Task(
-        description=f"Pesquise 50 palavras-chave para '{topic}'. Use o Ahrefs Keyword Explorer para validar volume e KD. Mapeie clusters semânticos.",
+        description=f"""
+        Realize uma pesquisa de palavras-chave para o tópico: '{topic}'.
+        1. Use o Ahrefs para encontrar 50 termos correlatos.
+        2. Filtre APENAS palavras com Potencial de Tráfego > 100 e Dificuldade (KD) acessível para o DR do cliente.
+        3. Agrupe em clusters semânticos (Intenção Informacional vs. Transacional).
+        """,
         agent=strategist,
-        expected_output="Tabela Markdown de 50 Palavras-Chave (Volume e KD validados via Ahrefs)."
+        context=[onboarding_task], # O estrategista precisa saber o DR do cliente (Task 1)
+        expected_output="Tabela de 50 Palavras-Chave validadas com Volume, KD e Intenção de Busca.",
+        output_file="2_keywords.md"
     )
     
-    # --- 3. Content Brief Task ---
+    # --- 3. Content Brief Task (O Arquiteto) ---
     brief_task = Task(
-        description="Crie um Content Brief matador usando o onboarding e as palavras-chave. Estruture H1, H2s e objetivos de conversão.",
+        description="""
+        Crie um Outline (Estrutura) estratégico para o artigo.
+        1. H1: Deve ser magnético e incluir a keyword principal.
+        2. H2s e H3s: Devem cobrir as dúvidas da Persona (Task 1) e usar as keywords secundárias (Task 2).
+        3. Indique onde colocar Links Internos e CTAs (Chamadas para Ação).
+        """,
         agent=architect,
-        expected_output="Content Brief estruturado (H1, Seções, Keywords por Seção)."
+        context=[onboarding_task, keywords_task], # Precisa da Persona e das Keywords
+        expected_output="Estrutura de artigo (Outline) otimizada para SEO com orientações para o redator.",
+        output_file="3_brief.md"
     )
     
-    # --- 4. Development Task ---
+    # --- 4. Development Task (A Execução) ---
     content_task = Task(
-        description="Desenvolva o conteúdo completo seguindo rigorosamente o Content Brief e o Onboarding da marca.",
+        description="""
+        Escreva o artigo completo.
+        REGRA DE OURO: Use EXATAMENTE o Tom de Voz definido no Onboarding (Task 1).
+        1. Siga a estrutura do Brief (Task 3) à risca.
+        2. O texto deve ser humano, fluido e evitar repetições robóticas.
+        3. Use negrito nas partes importantes para escaneabilidade.
+        """,
         agent=developer,
-        expected_output="Artigo completo redigido em Markdown."
+        context=[onboarding_task, brief_task], # O redator precisa do Tom de Voz e do Brief
+        expected_output="Artigo completo, engajador e formatado em Markdown.",
+        output_file="4_draft.md"
     )
 
-    # --- 5. On-page Audit Task ---
+    # --- 5. On-page Audit Task (O Auditor) ---
     audit_task = Task(
-        description="Realize uma auditoria SEO On-page no artigo. Verifique densidade de termos, Title Tag e Meta Description sugeridas.",
+        description="""
+        Atue como um Editor Chefe de SEO.
+        1. Analise o artigo escrito (Task 4).
+        2. Verifique se a Palavra-Chave principal aparece no H1, primeiro parágrafo e conclusão.
+        3. Crie a Meta Title (máx 60 chars) e Meta Description (máx 155 chars) otimizadas.
+        4. Se o texto estiver "robótico", indique pontos de melhoria.
+        """,
         agent=auditor_seo,
-        expected_output="Relatório de Auditoria SEO com checklist de melhorias e meta-dados."
+        context=[keywords_task, content_task], # Compara o texto com as keywords alvo
+        expected_output="Relatório de Aprovação com Meta Tags e Checklist de SEO verificado.",
+        output_file="5_audit.md"
     )
     
     # --- 6. Implementation Task ---
+    # Se não tiver drive_folder_id, o agente não conseguirá fazer o upload, mas gera o CSV localmente.
+    drive_instructions = f"Fazer o upload de TODOS os arquivos (.md e .csv) para o Drive na pasta {drive_folder_id}." if drive_folder_id else "Arquivar os documentos localmente (Drive Folder ID não configurado)."
+    
     implementation_task = Task(
-        description="Consolide TUDO: O relatório de onboarding (com as métricas de DR e tráfego do Ahrefs), as palavras-chave, o brief, o artigo final e a auditoria SEO. Salve no Google Docs e imprima o conteúdo completo como saída final.",
+        description=f"""
+        Consolide o projeto final.
+        1. Gere o arquivo CSV ('keywords.csv') a partir da tabela de palavras-chave (Task 2).
+        2. {drive_instructions}
+        3. Salve o artigo final (Task 4) no Google Docs.
+        4. Imprima o conteúdo completo consolidado para o usuário ver.
+        """,
         agent=implementer,
-        expected_output="O documento completo consolidado em Markdown contendo todas as etapas, incluindo as métricas do Ahrefs."
+        context=[onboarding_task, keywords_task, content_task, audit_task],
+        expected_output="Documento Final Consolidado contendo todas as etapas e confirmação de arquivamento.",
+        output_file="FINAL_DELIVERY.md"
     )
 
     # --- Execução da Crew ---
@@ -73,7 +119,7 @@ def run_workflow(client, topic, website, gemini_key, ahrefs_key, drive_folder_id
         max_rpm=2
     )
     
-    result = crew.kickoff()
+    result = crew.kickoff(inputs={'topic': topic, 'website': website, 'drive_folder_id': drive_folder_id or 'ROOT'})
     return result
 
 if __name__ == "__main__":
