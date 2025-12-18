@@ -13,13 +13,16 @@ def create_agents(gemini_api_key, ahrefs_api_key=None, drive_folder_id=None):
     )
 
     # Imports das Tools
-    from tools.ahrefs_tool import AhrefsKeywordTool
+    from tools.ahrefs_tool import AhrefsKeywordTool, AhrefsDomainStatsTool, AhrefsTopPagesTool
     from tools.google_drive_tool import GoogleDriveLoaderTool
     from tools.google_docs_tool import GoogleDocsWriterTool
     from crewai_tools import ScrapeWebsiteTool
 
     # Instancia as Tools
-    ahrefs_tool = AhrefsKeywordTool()
+    ahrefs_kw = AhrefsKeywordTool()
+    ahrefs_stats = AhrefsDomainStatsTool()
+    ahrefs_top = AhrefsTopPagesTool()
+    
     drive_tool = GoogleDriveLoaderTool()
     docs_tool = GoogleDocsWriterTool()
     scrape_tool = ScrapeWebsiteTool()
@@ -27,10 +30,10 @@ def create_agents(gemini_api_key, ahrefs_api_key=None, drive_folder_id=None):
     # --- 1. Onboarding Auditor ---
     auditor = Agent(
         role="Onboarding & Brand Auditor",
-        goal="Entender profundamente a identidade da marca, público-alvo e proposição de valor do site {website}.",
-        backstory="""Você é especialista em branding e análise de mercado. Sua missão é extrair a 'alma' do negócio
-        do cliente através do site fornecido e de documentos no Drive, garantindo que o tom de voz seja capturado.""",
-        tools=[drive_tool, scrape_tool],
+        goal="Entender a identidade da marca e analisar a saúde atual do site {website} usando métricas do Ahrefs (DR, Tráfego) e Top Pages.",
+        backstory="""Você é especialista em branding e análise técnica inicial. Sua missão é extrair a 'alma' do negócio
+        e também reportar como o site {website} está performando hoje no Google (DR e páginas que mais trazem tráfego).""",
+        tools=[drive_tool, scrape_tool, ahrefs_stats, ahrefs_top],
         llm=gemini_llm,
         verbose=True
     )
@@ -38,10 +41,10 @@ def create_agents(gemini_api_key, ahrefs_api_key=None, drive_folder_id=None):
     # --- 2. SEO Strategist ---
     planner = Agent(
         role="SEO Strategist",
-        goal="Realizar pesquisa de palavras-chave avançada (exatamente 50 termos) e clusterização semântica para {topic}.",
-        backstory="""Você é um estrategista de SEO sênior. Você usa dados para identificar oportunidades de tráfego.
-        Sua saída deve ser uma tabela Markdown organizada por clusters, com Volume, KD e Intenção.""",
-        tools=[ahrefs_tool],
+        goal="Realizar pesquisa de palavras-chave avançada e clusterização para {topic}, validando volumes no Ahrefs.",
+        backstory="""Você é um estrategista de SEO sênior. Você usa o Ahrefs Keyword Explorer para validar se os termos 
+        escolhidos têm volume real e KD aceitável. Sua saída deve ser uma tabela Markdown organizada.""",
+        tools=[ahrefs_kw],
         llm=gemini_llm,
         verbose=True
     )

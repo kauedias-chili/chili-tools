@@ -24,16 +24,16 @@ def run_workflow(client, topic, website, gemini_key, ahrefs_key, drive_folder_id
 
     # --- 1. Onboarding Task ---
     onboarding_task = Task(
-        description=f"Realize o onboarding da marca para o site {website}. Extraia persona, tom de voz e diferenciais competitivos.",
+        description=f"Realize o onboarding da marca para {website}. Use as ferramentas do Ahrefs para reportar o Domain Rating (DR) e as Top Pages atuais. Extraia persona, tom de voz e diferenciais.",
         agent=auditor,
-        expected_output="Documento de Onboarding detalhado com Brand Persona e Tom de Voz."
+        expected_output="Relatório de Onboarding incluindo Métricas Ahrefs (DR, Tráfego), Top Pages e Brand Persona."
     )
     
     # --- 2. Keyword Research Task ---
     keywords_task = Task(
-        description=f"Pesquise 50 palavras-chave relevantes para o tópico '{topic}' e mapeie clusters semânticos.",
+        description=f"Pesquise 50 palavras-chave para '{topic}'. Use o Ahrefs Keyword Explorer para validar volume e KD. Mapeie clusters semânticos.",
         agent=strategist,
-        expected_output="Tabela Markdown de 50 Palavras-Chave (Vol, KD, Intenção, Cluster)."
+        expected_output="Tabela Markdown de 50 Palavras-Chave (Volume e KD validados via Ahrefs)."
     )
     
     # --- 3. Content Brief Task ---
