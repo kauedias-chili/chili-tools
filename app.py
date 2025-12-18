@@ -387,10 +387,12 @@ HTML_PAGE = """
 
             <div id="resultContainer">
                 <div class="progress-steps">
-                    <div class="step" id="step1" title="Auditor"><i class="fa-solid fa-user-group"></i></div>
-                    <div class="step" id="step2" title="Planner"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
-                    <div class="step" id="step3" title="Writer"><i class="fa-solid fa-pen-nib"></i></div>
-                    <div class="step" id="step4" title="Manager"><i class="fa-solid fa-check-double"></i></div>
+                    <div class="step" id="step1" title="Onboarding Auditor"><i class="fa-solid fa-id-card"></i></div>
+                    <div class="step" id="step2" title="SEO Strategist"><i class="fa-solid fa-search-plus"></i></div>
+                    <div class="step" id="step3" title="Briefing Architect"><i class="fa-solid fa-drafting-compass"></i></div>
+                    <div class="step" id="step4" title="Content Developer"><i class="fa-solid fa-pen-nib"></i></div>
+                    <div class="step" id="step5" title="SEO Quality Audit"><i class="fa-solid fa-spell-check"></i></div>
+                    <div class="step" id="step6" title="Implementation"><i class="fa-solid fa-cloud-upload-alt"></i></div>
                 </div>
 
                 <div class="result-content">
@@ -405,14 +407,14 @@ HTML_PAGE = """
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // Função para simular progresso visual
+        // Função para simular progresso visual (Atualizada para 6 estágios)
         function simulateProgress(speed = 2000) {
-            const steps = ['step1', 'step2', 'step3', 'step4'];
+            const steps = ['step1', 'step2', 'step3', 'step4', 'step5', 'step6'];
             let current = 0;
             
             // Ativa o primeiro
             $('#'+steps[0]).addClass('active');
-            $('#loadingText').html('<i class="fa-solid fa-spinner fa-spin"></i> Auditor analisando mercado...');
+            $('#loadingText').html('<i class="fa-solid fa-spinner fa-spin"></i> Onboarding Auditor analisando site...');
 
             const interval = setInterval(() => {
                 $('#'+steps[current]).removeClass('active').addClass('completed');
@@ -420,7 +422,13 @@ HTML_PAGE = """
                 
                 if (current < steps.length) {
                     $('#'+steps[current]).addClass('active');
-                    const msgs = ['Planner definindo keywords...', 'Writer redigindo conteúdo...', 'Manager revisando qualidade...'];
+                    const msgs = [
+                        'SEO Strategist definindo keywords...', 
+                        'Briefing Architect montando roteiro...', 
+                        'Content Developer redigindo artigo...', 
+                        'SEO Quality Audit revisando on-page...',
+                        'Implementation enviando para o Docs...'
+                    ];
                     $('#loadingText').html(`<i class="fa-solid fa-spinner fa-spin"></i> ${msgs[current-1]}`);
                 } else {
                     clearInterval(interval);
@@ -451,7 +459,7 @@ HTML_PAGE = """
                          $('#outputContent').html(marked.parse(r.message));
                          btn.prop('disabled', false);
                          runBtn.prop('disabled', false);
-                    }, 6000); // Espera a animação acabar +/-
+                    }, 9000); // 1500ms * 6 passos = 9000ms
                 }
             });
         });
@@ -509,55 +517,48 @@ def home():
 
 @app.route('/demo-data', methods=['GET'])
 def demo_data():
-    # Dados fictícios bonitos para impressionar (Atualizado com SEO Avançado)
     mock_response = """
-## 📋 Relatório de Estratégia & Conteúdo
+## 🏆 Relatório Avançado SEO VIP (6 Estágios)
 
-### 🔍 1. Análise do Auditor
-**Público-Alvo**: Gestores de Marketing e CEOs de SaaS B2B.
-**Contexto**: Buscam eficiência operacional e redução de CAC.
-**Estratégia**: Dominar a SERP para termos de "Automação com IA".
+### 📂 1. Onboarding & Brand Persona
+**Marca**: Chili Tools. **Tom de Voz**: Inovador, Tecnológico, Direto.
+**Diferencial**: Automação real via Agentes Autônomos.
 
 ---
 
-### 🧠 2. Planejamento SEO (50 Keywords Clusterizadas)
-
-**Resumo da Estratégia**:
-*   **Método**: Query Fan-out
-*   **Split Intenção**: 50% Comercial / 50% Informacional
-*   **Cauda**: 30% Short / 70% Long
-
-#### 📂 Cluster A: Automação de Marketing (Comercial)
-| Palavra-Chave | Vol | KD | Intenção | Tipo |
+### 🧠 2. Keyword Research (Top 50 terms)
+| Palavra-Chave | Vol | KD | Intenção | Cluster |
 | :--- | :--- | :--- | :--- | :--- |
-| **agentes autônomos marketing** | 1.2k | 15 | Comercial | Short |
-| comprar software ia marketing | 800 | 25 | Comercial | Mid |
-| melhor ferramenta automação b2b | 450 | 10 | Comercial | Long |
-| ... (simulando +20 linhas) | ... | ... | ... | ... |
-
-#### 📂 Cluster B: Tendências e Futuro (Informacional)
-| Palavra-Chave | Vol | KD | Intenção | Tipo |
-| :--- | :--- | :--- | :--- | :--- |
-| o futuro do marketing digital | 5k | 40 | Info | Short |
-| como usar ia no marketing | 3.2k | 20 | Info | Mid |
-| benefícios agentes autônomos empresa | 200 | 5 | Info | Long |
-| ... (simulando +25 linhas) | ... | ... | ... | ... |
+| **agentes autônomos marketing** | 1.2k | 15 | Comercial | Automação |
+| ferramentas seo ia 2025 | 2.5k | 30 | Info | IA Tools |
+| ... (50 termos mapeados com sucesso) | ... | ... | ... | ... |
 
 ---
 
-### ✍️ 3. Artigo Final (Baseado no Cluster A)
-**Título**: Agentes Autônomos: A Revolução B2B
-
-(Conteúdo do artigo gerado com H2 e H3 otimizados para as palavras-chave acima...)
-
-> "A automação inteligente é o novo diferencial competitivo."
+### 📝 3. Content Brief (Estratégico)
+**Título**: O Guia Definitivo dos Agentes Autônomos de Marketing em 2025.
+**Estrutura**: 
+- H2: Por que a IA generativa não é mais suficiente?
+- H2: A ascensão da Automação de Agentes (The CrewAI Effect).
+- H3: On-page vs Off-page na era dos Agentes.
 
 ---
 
-### ✅ 4. Aprovação do Manager
-*   **Checklist SEO**: Densidade de palavras-chave atingida (Aprovado).
-*   **Clusterização**: Cobertura semântica completa (Aprovado).
-*   **Status**: **PRONTO PARA PUBLICAR** 🚀
+### ✍️ 4. Content Developed
+O conteúdo foi desenvolvido seguindo o brief acima. Foco total em autoridade técnica e SEO On-page.
+(Texto completo gerado com ~1.500 palavras...)
+
+---
+
+### 🔍 5. On-page SEO Audit
+- **Checklist**: Foco na Keyword Primária (OK), Meta Description (Criada), Internlinks (Sugeridos).
+- **Audit Score**: 94/100.
+
+---
+
+### 🚀 6. Implementation Status
+- **Google Docs**: Documento criado com sucesso.
+- **Link**: [Documento Final Chili Tools](https://docs.google.com/...)
     """
     return jsonify({'status': 'success', 'message': mock_response})
 
@@ -586,7 +587,17 @@ def run_crew():
         result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
         
         if result.returncode == 0:
-            return jsonify({'status': 'success', 'data': result.stdout})
+            stdout = result.stdout
+            
+            # FILTRO: Extrai apenas o que está entre os marcadores
+            if "--- INÍCIO DO CONTEÚDO ---" in stdout and "--- FIM DO CONTEÚDO ---" in stdout:
+                parts = stdout.split("--- INÍCIO DO CONTEÚDO ---")
+                content = parts[1].split("--- FIM DO CONTEÚDO ---")[0].strip()
+            else:
+                # Fallback caso os marcadores não funcionem, envia o raw (mas limpo)
+                content = stdout.strip()
+
+            return jsonify({'status': 'success', 'data': content})
         else:
             # Retorna o erro exato que deu no script
             return jsonify({'status': 'error', 'message': f"Erro no script:\n{result.stderr}\n\nSaída:\n{result.stdout}"})

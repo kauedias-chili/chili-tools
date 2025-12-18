@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 def create_agents(gemini_api_key, ahrefs_api_key=None, drive_folder_id=None):
     # Inicializa o LLM com a chave fornecida
     gemini_llm = LLM(
-        model='gemini/gemini-2.0-flash-exp', 
+        model='gemini/gemini-2.5-flash', 
         api_key=gemini_api_key,
         temperature=0.0
     )
@@ -23,57 +23,68 @@ def create_agents(gemini_api_key, ahrefs_api_key=None, drive_folder_id=None):
     docs_tool = GoogleDocsWriterTool()
     scrape_tool = ScrapeWebsiteTool()
 
-    # 1. Audience & Market Auditor
-    # Contexto específico para o Folder ID
-    auditor_description = "Analisa o público-alvo e concorrentes."
-    if drive_folder_id:
-        auditor_description += f" VOCÊ DEVE USAR a ferramenta GoogleDriveLoaderTool para ler os arquivos da pasta ID: {drive_folder_id}."
-    else:
-        auditor_description += " (Aviso: Nenhum ID de pasta do Drive fornecido)."
-    
-    auditor_description += " VOCÊ TAMBÉM DEVE USAR a ferramenta ScrapeWebsiteTool para ler o site do cliente e entender seus produtos/serviços."
-
+    # --- 1. Onboarding Auditor ---
     auditor = Agent(
-        name="Audience & Market Auditor",
-        role="Strategist",
-        description=auditor_description,
-        goal="Ler os documentos do Drive E o site do cliente para criar um relatório detalhado de Persona, Dores e Concorrentes.",
-        backstory="Você é um estrategista de conteúdo sênior. Você cruza dados internos (Drive) com dados públicos (Site) para uma análise completa.",
+        role="Onboarding & Brand Auditor",
+        goal="Entender profundamente a identidade da marca, público-alvo e proposição de valor do site {website}.",
+        backstory="""Você é especialista em branding e análise de mercado. Sua missão é extrair a 'alma' do negócio
+        do cliente através do site fornecido e de documentos no Drive, garantindo que o tom de voz seja capturado.""",
         tools=[drive_tool, scrape_tool],
-        llm=gemini_llm
+        llm=gemini_llm,
+        verbose=True
     )
 
-    # 2. Keyword Planner
+    # --- 2. SEO Strategist ---
     planner = Agent(
-        name="Keyword Planner",
-        role="Researcher",
-        description="Define estratégia de SEO Avançada. REGRAS OBRIGATÓRIAS: 1) Gerar EXATAMENTE 50 palavras-chave. 2) Aplicar método 'Query Fan-out'. 3) Distribuição de Intenção: 50% Comercial (Transacional), 50% Informativa. 4) Distribuição de Cauda: 30% Short-tail, 70% Mid/Long-tail. 5) Agrupar por Clusters Semânticos. VOCÊ DEVE USAR a ferramenta AhrefsKeywordTool para validar volume.",
-        goal="Criar um Plano de Palavras-chave Clusterizado. OBRIGATÓRIO: O resultado final deve conter TABELAS MARKDOWN (colunas: Palavra-Chave, Vol, KD, Intenção, Tipo) para cada cluster.",
-        backstory="Estrategista de SEO Sênior. Você é obcecado por organização. Você NÃO entrega listas com bullets, você entrega TABELAS MARKDOWN perfeitas.",
+        role="SEO Strategist",
+        goal="Realizar pesquisa de palavras-chave avançada (exatamente 50 termos) e clusterização semântica para {topic}.",
+        backstory="""Você é um estrategista de SEO sênior. Você usa dados para identificar oportunidades de tráfego.
+        Sua saída deve ser uma tabela Markdown organizada por clusters, com Volume, KD e Intenção.""",
         tools=[ahrefs_tool],
-        llm=gemini_llm
+        llm=gemini_llm,
+        verbose=True
     )
 
-    # 3. Content Writer
+    # --- 3. Briefing Architect ---
+    briefing_agent = Agent(
+        role="Briefing Architect",
+        goal="Transformar a estratégia de SEO e dados da marca em um Content Brief detalhado e estruturado.",
+        backstory="""Você cria roteiros para escritores. Seu brief deve conter: Título Sugerido, Objetivo, 
+        Público-alvo, Palavras-chave primárias/secundárias e uma estrutura detalhada de H1, H2 e H3.""",
+        llm=gemini_llm,
+        verbose=True
+    )
+
+    # --- 4. Content Developer ---
     writer = Agent(
-        name="Content Writer",
-        role="Executor",
-        description="Produz o conteúdo conforme estratégia, SOPs e tom de voz. Pode consultar arquivos de referência.",
-        goal="Redigir o artigo completo com base na estratégia, usando markdown perfeito. Valide informações técnicas no site do cliente se necessário.",
-        backstory="Redator Copywriter. Você escreve textos engajadores, que seguem estritamente o tom de voz identificado pelo Auditor.",
-        tools=[drive_tool, scrape_tool], # Acesso aos SOPs e Site
-        llm=gemini_llm
+        role="Content Developer",
+        goal="Escrever um artigo de alta conversão e autoridade baseado estritamente no Content Brief fornecido.",
+        backstory="""Você é um redator premiado. Você sabe como prender a atenção do leitor enquanto otimiza 
+        para buscadores. Você usa os dados do site {website} para garantir precisão técnica.""",
+        tools=[scrape_tool],
+        llm=gemini_llm,
+        verbose=True
     )
 
-    # 4. Content Manager
-    manager = Agent(
-        name="Content Manager",
-        role="Boss",
-        description="Valida se o texto atende aos requisitos e publica no Google Docs.",
-        goal="Garantir a qualidade final, revisar erros e OBRIGATORIAMENTE usar o GoogleDocsWriterTool para salvar o artigo final.",
-        backstory="Editor Chefe. Você é chato com qualidade. Se estiver ruim, mande refazer. Se estiver bom, VOCÊ PUBLICA NO DOCS.",
-        tools=[docs_tool], # Capaz de criar o doc final
-        llm=gemini_llm
+    # --- 5. SEO Quality Manager ---
+    quality_manager = Agent(
+        role="SEO Quality Manager",
+        goal="Realizar um On-page Audit técnico no conteúdo desenvolvido, garantindo perfeição em SEO e legibilidade.",
+        backstory="""Você é implacável. Você verifica densidade de palavras-chave, meta tags sugeridas, 
+        tamanho dos parágrafos e se o tom de voz está alinhado com o onboarding.""",
+        llm=gemini_llm,
+        verbose=True
     )
-    
-    return auditor, planner, writer, manager
+
+    # --- 6. Implementation Manager ---
+    implementation_agent = Agent(
+        role="Implementation Manager",
+        goal="Preparar o documento final e garantir a implementação/postagem no Google Docs.",
+        backstory="""Você é o responsável final pela entrega. Você organiza o conteúdo, adiciona as notas de auditoria 
+        e salva no Google Docs usando a ferramenta apropriada.""",
+        tools=[docs_tool],
+        llm=gemini_llm,
+        verbose=True
+    )
+
+    return auditor, planner, briefing_agent, writer, quality_manager, implementation_agent
