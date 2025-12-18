@@ -459,7 +459,7 @@ HTML_PAGE = """
                          $('#outputContent').html(marked.parse(r.message));
                          btn.prop('disabled', false);
                          runBtn.prop('disabled', false);
-                    }, 6000); // Espera a animação acabar +/-
+                    }, 9000); // 1500ms * 6 passos = 9000ms
                 }
             });
         });
