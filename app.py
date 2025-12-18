@@ -586,7 +586,17 @@ def run_crew():
         result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
         
         if result.returncode == 0:
-            return jsonify({'status': 'success', 'data': result.stdout})
+            stdout = result.stdout
+            
+            # FILTRO: Extrai apenas o que está entre os marcadores
+            if "--- INÍCIO DO CONTEÚDO ---" in stdout and "--- FIM DO CONTEÚDO ---" in stdout:
+                parts = stdout.split("--- INÍCIO DO CONTEÚDO ---")
+                content = parts[1].split("--- FIM DO CONTEÚDO ---")[0].strip()
+            else:
+                # Fallback caso os marcadores não funcionem, envia o raw (mas limpo)
+                content = stdout.strip()
+
+            return jsonify({'status': 'success', 'data': content})
         else:
             # Retorna o erro exato que deu no script
             return jsonify({'status': 'error', 'message': f"Erro no script:\n{result.stderr}\n\nSaída:\n{result.stdout}"})
