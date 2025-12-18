@@ -59,9 +59,9 @@ def run_workflow(client, topic, website, gemini_key, ahrefs_key, drive_folder_id
     
     # --- 6. Implementation Task ---
     implementation_task = Task(
-        description="Consolide o artigo e a auditoria em um documento final e salve no Google Docs.",
+        description="Consolide TUDO: O relatório de onboarding (com as métricas de DR e tráfego do Ahrefs), as palavras-chave, o brief, o artigo final e a auditoria SEO. Salve no Google Docs e imprima o conteúdo completo como saída final.",
         agent=implementer,
-        expected_output="Confirmação de salvamento no Google Docs com link/ID."
+        expected_output="O documento completo consolidado em Markdown contendo todas as etapas, incluindo as métricas do Ahrefs."
     )
 
     # --- Execução da Crew ---
