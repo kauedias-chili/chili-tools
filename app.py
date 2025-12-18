@@ -638,21 +638,37 @@ def run_background_crew(task_id, cmd):
         # Executa o script e captura a saída
         result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
         
-        if result.returncode == 0:
-            stdout = result.stdout
-            if "--- INÍCIO DO CONTEÚDO ---" in stdout and "--- FIM DO CONTEÚDO ---" in stdout:
-                parts = stdout.split("--- INÍCIO DO CONTEÚDO ---")
-                content = parts[1].split("--- FIM DO CONTEÚDO ---")[0].strip()
-            else:
-                content = stdout.strip()
-            
+        stdout = result.stdout
+        stderr = result.stderr
+        
+        # Lógica de extração do conteúdo limpo
+        if "--- INÍCIO DO CONTEÚDO ---" in stdout and "--- FIM DO CONTEÚDO ---" in stdout:
+            parts = stdout.split("--- INÍCIO DO CONTEÚDO ---")
+            content = parts[1].split("--- FIM DO CONTEÚDO ---")[0].strip()
+        else:
+            # Se não encontrar os marcadores, o sistema falhou em produzir o resultado final esperado
+            content = None
+
+        if result.returncode == 0 and content:
             tasks_db[task_id] = {'status': 'completed', 'data': content}
         else:
-            error_msg = f"Erro no script:\n{result.stderr}\n\nSaída:\n{result.stdout}"
-            tasks_db[task_id] = {'status': 'error', 'message': error_msg}
+            # Se deu erro ou o conteúdo está vazio/sujo, filtramos o erro para o usuário
+            friendly_error = "Ocorreu um erro técnico durante a execução dos agentes."
+            
+            # Detecção de erros comuns para mensagens amigáveis
+            if "RESOURCE_EXHAUSTED" in stdout or "429" in stdout or "RESOURCE_EXHAUSTED" in stderr:
+                friendly_error = "Limite de cota da API Gemini excedido. Por favor, aguarde alguns minutos antes de tentar novamente."
+            elif "API_KEY" in stdout or "invalid" in stdout.lower():
+                friendly_error = "Chave de API inválida ou não configurada corretamente."
+            
+            tasks_db[task_id] = {
+                'status': 'error', 
+                'message': friendly_error,
+                'debug': stderr # Mantemos o debug no objeto caso precise analisar depois (não vai pro alert do JS se usarmos status.message)
+            }
             
     except Exception as e:
-        tasks_db[task_id] = {'status': 'error', 'message': str(e)}
+        tasks_db[task_id] = {'status': 'error', 'message': f"Erro inesperado: {str(e)}"}
 
 @app.route('/run-crew', methods=['POST'])
 def run_crew():
