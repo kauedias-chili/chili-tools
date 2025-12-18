@@ -5,10 +5,11 @@ from dotenv import load_dotenv
 
 def create_agents(gemini_api_key, ahrefs_api_key=None, drive_folder_id=None):
     # Inicializa o LLM com a chave fornecida
+    # O Gemini 2.5 Flash é o melhor custo-benefício atual (Rápido e Inteligente)
     gemini_llm = LLM(
         model='gemini/gemini-2.5-flash', 
         api_key=gemini_api_key,
-        temperature=0.0
+        temperature=0.2 # Um pouco de criatividade para o Writer
     )
 
     # Imports das Tools

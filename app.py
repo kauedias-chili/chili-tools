@@ -1,32 +1,20 @@
-from flask import Flask, render_template_string, request, jsonify
 import subprocess
 import os
 import sys
+import threading
+import uuid
+import time
 
-# Define onde o app.py está rodando
+# Configuração de caminhos dinâmica (Compatível com Windows e Linux/Render)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SCRIPT_PATH = os.path.join(BASE_DIR, 'backend', 'crewai_app', 'main.py')
 
-# LISTA DE CAMINHOS CORRIGIDA (Baseada na sua estrutura atual)
-possible_paths = [
-    # Caminho correto: app.py e backend são vizinhos
-    os.path.join(BASE_DIR, 'backend', 'crewai_app', 'main.py'),
-    
-    # Tentativa caso esteja solto na backend
-    os.path.join(BASE_DIR, 'backend', 'main.py'),
+if not os.path.exists(SCRIPT_PATH):
+    # Tenta caminho alternativo
+    SCRIPT_PATH = os.path.join(BASE_DIR, 'main.py')
 
-    # Tentativa caso esteja na mesma pasta do app.py
-    os.path.join(BASE_DIR, 'main.py'),
-    
-    # Tentativa completa (hardcoded) caso tudo falhe
-    r'C:\xampp\htdocs\crewIA\multi-agent-system\backend\crewai_app\main.py'
-]
-
-SCRIPT_PATH = None
-for path in possible_paths:
-    if os.path.exists(path):
-        SCRIPT_PATH = path
-        print(f"✅ Arquivo main.py ENCONTRADO em: {path}")
-        break
+if not os.path.exists(SCRIPT_PATH):
+    print(f"❌ ERRO CRÍTICO: main.py não encontrado em {SCRIPT_PATH}")
 
 if not SCRIPT_PATH:
     print("❌ ERRO CRÍTICO: Não encontrei o arquivo main.py em lugar nenhum!")
@@ -35,6 +23,10 @@ if not SCRIPT_PATH:
         print(f" - {p}")
 
 app = Flask(__name__)
+
+# Memória temporária para armazenar o status das tarefas
+# { 'task_id': { 'status': 'running', 'result': None, 'error': None } }
+tasks_db = {}
 
 # --- (O resto do HTML continua igual, apenas resumido aqui) ---
 HTML_PAGE = """
@@ -464,20 +456,19 @@ HTML_PAGE = """
             });
         });
 
-        // Run Real Mode
+        // Run Real Mode (Atualizado para modo Assíncrono/Polling)
         $('#aiForm').on('submit', function(e) {
             e.preventDefault();
             const btn = $('#btnRun');
             const demoBtn = $('#btnDemo');
             
-            btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin"></i> Processando...');
+            btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin"></i> Iniciando...');
             demoBtn.prop('disabled', true);
             
             $('#resultContainer').show();
             $('#outputContent').empty();
             $('#loadingText').show();
             
-            // Progresso mais lento para execução real (apenas visual, não sincronizado real-time ainda)
             simulateProgress(5000); 
 
             $.ajax({
@@ -485,16 +476,31 @@ HTML_PAGE = """
                 type: 'POST',
                 data: $(this).serialize(),
                 success: function(r) {
-                    btn.prop('disabled', false).html('<i class="fa-solid fa-play"></i> Iniciar Agentes');
-                    demoBtn.prop('disabled', false);
-                    
-                    if(r.status === 'success'){
-                        $('#outputContent').html(marked.parse(r.data));
-                        // Força conclusão visual
-                        $('.step').removeClass('active').addClass('completed');
-                        $('#loadingText').html('<i class="fa-solid fa-check-circle" style="color: var(--accent-color)"></i> Finalizado com sucesso!');
+                    if(r.status === 'started') {
+                        // Começa a perguntar pelo status
+                        const taskId = r.task_id;
+                        const pollInterval = setInterval(() => {
+                            $.get(`/check-status/${taskId}`, function(status) {
+                                if(status.status === 'completed') {
+                                    clearInterval(pollInterval);
+                                    btn.prop('disabled', false).html('<i class="fa-solid fa-play"></i> Iniciar Agentes');
+                                    demoBtn.prop('disabled', false);
+                                    $('#outputContent').html(marked.parse(status.data));
+                                    $('.step').removeClass('active').addClass('completed');
+                                    $('#loadingText').html('<i class="fa-solid fa-check-circle" style="color: var(--accent-color)"></i> Finalizado com sucesso!');
+                                } else if(status.status === 'error') {
+                                    clearInterval(pollInterval);
+                                    btn.prop('disabled', false).html('<i class="fa-solid fa-play"></i> Iniciar Agentes');
+                                    demoBtn.prop('disabled', false);
+                                    $('#outputContent').html(`<div style="color: var(--danger-color); padding: 1rem; border: 1px solid var(--danger-color); border-radius: 8px;">${status.message}</div>`);
+                                    $('#loadingText').hide();
+                                }
+                            });
+                        }, 5000); // Checa a cada 5 segundos
                     } else {
-                        $('#outputContent').html(`<div style="color: var(--danger-color); padding: 1rem; border: 1px solid var(--danger-color); border-radius: 8px;">${r.message}</div>`);
+                        btn.prop('disabled', false).html('<i class="fa-solid fa-play"></i> Iniciar Agentes');
+                        demoBtn.prop('disabled', false);
+                        alert('Erro ao iniciar agentes: ' + r.message);
                     }
                 },
                 error: function() {
@@ -562,49 +568,64 @@ O conteúdo foi desenvolvido seguindo o brief acima. Foco total em autoridade t�
     """
     return jsonify({'status': 'success', 'message': mock_response})
 
+def run_background_crew(task_id, cmd):
+    try:
+        # Executa o script e captura a saída
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
+        
+        if result.returncode == 0:
+            stdout = result.stdout
+            if "--- INÍCIO DO CONTEÚDO ---" in stdout and "--- FIM DO CONTEÚDO ---" in stdout:
+                parts = stdout.split("--- INÍCIO DO CONTEÚDO ---")
+                content = parts[1].split("--- FIM DO CONTEÚDO ---")[0].strip()
+            else:
+                content = stdout.strip()
+            
+            tasks_db[task_id] = {'status': 'completed', 'data': content}
+        else:
+            error_msg = f"Erro no script:\n{result.stderr}\n\nSaída:\n{result.stdout}"
+            tasks_db[task_id] = {'status': 'error', 'message': error_msg}
+            
+    except Exception as e:
+        tasks_db[task_id] = {'status': 'error', 'message': str(e)}
+
 @app.route('/run-crew', methods=['POST'])
 def run_crew():
     if not SCRIPT_PATH:
-        return jsonify({'status': 'error', 'message': 'ERRO NO SERVIDOR: O arquivo main.py não foi encontrado. Verifique o terminal do Python.'})
+        return jsonify({'status': 'error', 'message': 'ERRO NO SERVIDOR: O arquivo main.py não foi encontrado.'})
 
     c = request.form.get('cliente')
     t = request.form.get('topico')
     s = request.form.get('site')
     
-    # Obtém as chaves do form ou tenta pegar do ambiente se estiver vazio (fallback)
     gemini_key = request.form.get('gemini_key') or os.getenv('GEMINI_API_KEY')
     ahrefs_key = request.form.get('ahrefs_key') or os.getenv('AHREFS_API_KEY') or "SEM_CHAVE"
 
     if not gemini_key:
          return jsonify({'status': 'error', 'message': 'ERRO: A Gemini API Key é obrigatória!'})
 
-    try:
-        # Usa o sys.executable para garantir que usa o Python da .venv
-        # Passa as chaves como novos argumentos
-        cmd = [sys.executable, SCRIPT_PATH, c, t, s, gemini_key, ahrefs_key]
-        
-        # check=True faz o python avisar se o script der erro
-        result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8')
-        
-        if result.returncode == 0:
-            stdout = result.stdout
-            
-            # FILTRO: Extrai apenas o que está entre os marcadores
-            if "--- INÍCIO DO CONTEÚDO ---" in stdout and "--- FIM DO CONTEÚDO ---" in stdout:
-                parts = stdout.split("--- INÍCIO DO CONTEÚDO ---")
-                content = parts[1].split("--- FIM DO CONTEÚDO ---")[0].strip()
-            else:
-                # Fallback caso os marcadores não funcionem, envia o raw (mas limpo)
-                content = stdout.strip()
+    # Gera um ID único para esta tarefa
+    task_id = str(uuid.uuid4())
+    tasks_db[task_id] = {'status': 'running'}
 
-            return jsonify({'status': 'success', 'data': content})
-        else:
-            # Retorna o erro exato que deu no script
-            return jsonify({'status': 'error', 'message': f"Erro no script:\n{result.stderr}\n\nSaída:\n{result.stdout}"})
-            
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)})
+    # Comando para rodar
+    cmd = [sys.executable, SCRIPT_PATH, c, t, s, gemini_key, ahrefs_key]
+
+    # Inicia a thread em background
+    thread = threading.Thread(target=run_background_crew, args=(task_id, cmd))
+    thread.start()
+
+    return jsonify({'status': 'started', 'task_id': task_id})
+
+@app.route('/check-status/<task_id>', methods=['GET'])
+def check_status(task_id):
+    task = tasks_db.get(task_id)
+    if not task:
+        return jsonify({'status': 'not_found'})
+    
+    return jsonify(task)
 
 if __name__ == '__main__':
-    print("--- INICIANDO SERVIDOR ---")
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    print(f"--- INICIANDO SERVIDOR NA PORTA {port} ---")
+    app.run(host='0.0.0.0', port=port, debug=False)
