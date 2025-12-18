@@ -11,7 +11,5 @@ requests
 beautifulsoup4
 langchain
 pydantic
-spacy
-seoanalyzer
-lxml
-html5lib
+setuptools
+wheel
